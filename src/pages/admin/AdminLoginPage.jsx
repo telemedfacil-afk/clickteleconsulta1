@@ -75,8 +75,7 @@ const AdminLoginPage = () => {
             description: 'Conta de administrador criada/atualizada. Tente logar.',
             variant: 'success'
         });
-        setEmail('contato.rbso2024@gmail.com');
-        setPassword('Dg2486xx@');
+        // Credenciais removidas por segurança — preencha manualmente após setup
     } catch (error) {
         toast({
             variant: 'destructive',
