@@ -47,7 +47,6 @@ export const AppointmentsProvider = ({ children }) => {
                 .from('agendamentos')
                 .select(`
                     *,
-                    servico:servicos(nome),
                     medicos!inner(id, name,specialty,public_name),
                     perfis_usuarios:perfis_usuarios!agendamentos_patient_id_fkey(full_name, email, cpf, data_nasc, whatsapp),
                     guest_patients:guest_id(name, email, phone),
