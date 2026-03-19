@@ -56,6 +56,20 @@ import AiChatWidget from '@/components/AiChatWidget';
 import GuestAppointmentPage from '@/pages/GuestAppointmentPage';
 import Preloader from '@/components/Preloader';
 
+// Páginas adicionais (P2 — rotas criadas em 2026-03-19)
+import StorePage from '@/pages/StorePage';
+import PaymentPage from '@/pages/PaymentPage';
+import CheckoutRedirect from '@/pages/CheckoutRedirect';
+import SuccessPage from '@/pages/SuccessPage';
+import AdminCleanupPage from '@/pages/AdminCleanupPage';
+import AdminSetupPage from '@/pages/AdminSetupPage';
+import HandleApplicationPage from '@/pages/HandleApplicationPage';
+import DoctorInterestPage from '@/pages/DoctorInterestPage';
+import DoctorDashboardPage from '@/pages/DoctorDashboardPage';
+import DoctorGoogleCalendarPage from '@/pages/DoctorGoogleCalendarPage';
+import DoctorSignUpPage from '@/pages/DoctorSignUpPage';
+import DoctorProfilePage from '@/pages/DoctorProfilePage';
+
 // Public Layout Component
 const AppLayout = () => {
   return (
@@ -278,6 +292,59 @@ function App() {
 
             {/* Dynamic Routes */}
             <Route path="/medico/:id" element={<DoctorPublicProfilePage />} />
+
+            {/* Rotas adicionais — P2 (2026-03-19) */}
+            {/* Loja */}
+            <Route path="/loja" element={<StorePage />} />
+
+            {/* Pagamento */}
+            <Route path="/pagamento" element={
+              <ProtectedRoute allowedRoles={['paciente']}>
+                <PaymentPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Redirects legados */}
+            <Route path="/checkout-redirect" element={<CheckoutRedirect />} />
+            <Route path="/sucesso" element={<SuccessPage />} />
+
+            {/* Cadastro e perfil de médico (público) */}
+            <Route path="/seja-medico" element={<DoctorInterestPage />} />
+            <Route path="/cadastro-medico" element={<DoctorSignUpPage />} />
+            <Route path="/perfil-medico/:id" element={<DoctorProfilePage />} />
+
+            {/* Dashboard alternativo de médico (protegido) */}
+            <Route path="/medico/painel" element={
+              <ProtectedRoute allowedRoles={['medico']}>
+                <DoctorDashboardPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Google Calendar do médico (protegido) */}
+            <Route path="/medico/google-calendar" element={
+              <ProtectedRoute allowedRoles={['medico']}>
+                <DoctorGoogleCalendarPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Processamento de candidatura de médico */}
+            <Route path="/admin/candidatura" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <HandleApplicationPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Setup e cleanup admin (protegidos) */}
+            <Route path="/admin/setup" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminSetupPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/cleanup" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminCleanupPage />
+              </ProtectedRoute>
+            } />
             
             <Route path="*" element={<Navigate to="/" />} />
           </Route>

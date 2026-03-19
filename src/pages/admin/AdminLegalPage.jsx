@@ -45,7 +45,6 @@ const AdminLegalPage = () => {
         setLoading(true);
         setFetchError(null);
         try {
-            console.log(`[AdminLegal] Fetching documents for type: ${activeTab}`);
             
             // Using supabase.functions.invoke with GET method (via query params)
             const { data, error } = await supabase.functions.invoke(`manage-documents?type=${activeTab}`, {
@@ -57,7 +56,6 @@ const AdminLegalPage = () => {
                 throw new Error(error.message || 'Erro ao buscar documentos');
             }
             
-            console.log(`[AdminLegal] Fetched ${data?.length || 0} versions`);
             
             if (!Array.isArray(data)) {
                 console.error("Resposta inválida da API (esperado array):", data);
@@ -96,13 +94,11 @@ const AdminLegalPage = () => {
             return;
         }
 
-        console.log(`[AdminLegal] File selected: ${file.name} (${file.size} bytes)`);
         setSelectedFile(file);
     };
 
     const uploadPDF = async (file) => {
         try {
-            console.log(`[AdminLegal] Starting upload for: ${file.name}`);
             const timestamp = new Date().getTime();
             const randomString = Math.random().toString(36).substring(7);
             const fileExt = file.name.split('.').pop();
@@ -119,7 +115,6 @@ const AdminLegalPage = () => {
 
             if (error) throw error;
 
-            console.log(`[AdminLegal] Upload successful, getting public URL...`);
             const { data: publicData } = supabase.storage
                 .from('legal-documents')
                 .getPublicUrl(filePath);
@@ -141,7 +136,6 @@ const AdminLegalPage = () => {
             // 1. Upload PDF
             const finalPdfUrl = await uploadPDF(selectedFile);
             const finalFileName = selectedFile.name;
-            console.log(`[AdminLegal] PDF ready at: ${finalPdfUrl}`);
 
             // 2. Save metadata via API using invoke
             const requestBody = {
@@ -150,7 +144,6 @@ const AdminLegalPage = () => {
                 pdf_file_name: finalFileName
             };
             
-            console.log(`[AdminLegal] Sending API request to create version...`, requestBody);
 
             const { data, error } = await supabase.functions.invoke('manage-documents', {
                 method: 'POST',
@@ -162,7 +155,6 @@ const AdminLegalPage = () => {
                 throw new Error(error.message || 'Erro ao criar versão');
             }
 
-            console.log(`[AdminLegal] Version created successfully:`, data);
 
             toast({ title: 'Sucesso!', description: 'Nova versão publicada e ativada.', variant: 'success' });
             

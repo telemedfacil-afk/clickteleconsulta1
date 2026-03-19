@@ -73,8 +73,6 @@ const AppointmentsPage = () => {
       // Formula: Preço Final = Repasse / (1 - Taxa%)
       const precoFinal = taxaPercentual === 0 ? precoRepasse : precoRepasse / (1 - (taxaPercentual / 100));
       
-      console.log(`Doctor: ${doc.name}, Repasse: ${precoRepasse}, Taxa: ${taxaPercentual}%, Final: ${precoFinal}`);
-      
       // Store this precoFinal in the doctorPrices object
       newDoctorPrices[doc.id] = precoFinal;
 
@@ -84,7 +82,6 @@ const AppointmentsPage = () => {
       };
     });
 
-    console.log("Calculated doctorPrices object:", newDoctorPrices);
     setDoctorPrices(newDoctorPrices);
     return processedDoctors;
   }, []);
