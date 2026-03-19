@@ -141,6 +141,9 @@ function App() {
           <Route path="/doctor/reviews" element={<Navigate to="/medico/dashboard/avaliacoes" replace />} />
           <Route path="/patient/reviews" element={<Navigate to="/paciente/dashboard/avaliacoes" replace />} />
 
+          {/* Auth Routes fora do DoctorRouteGuard */}
+          <Route path="/acesso-medico" element={<AuthRedirect role="medico" />} />
+
           {/* 1. Doctor Dashboard Routes */}
           {/* All dashboard routes including procedimentos are properly nested inside DoctorArea */}
           <Route path="/medico/dashboard/*" element={
@@ -240,7 +243,6 @@ function App() {
             
             {/* Auth Routes */}
             <Route path="/acesso-paciente" element={<AuthRedirect role="paciente" />} />
-            <Route path="/acesso-medico" element={<AuthRedirect role="medico" />} />
             
             <Route path="/recuperar-senha" element={<PasswordRecoveryPage />} />
             <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
