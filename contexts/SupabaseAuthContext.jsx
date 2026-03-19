@@ -1,135 +1,90 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 
 const AuthContext = createContext(undefined);
 
+const buildProfileFromUser = (user) => {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email ?? '',
+    full_name: user.user_metadata?.full_name ?? user.email ?? '',
+    role: user.user_metadata?.role ?? 'paciente',
+    image_url: user.user_metadata?.image_url ?? null,
+  };
+};
+
 export const AuthProvider = ({ children }) => {
   const { toast } = useToast();
-
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
 
-  const fetchProfile = useCallback(async (userId, userMeta) => {
-    if (!userId) { setProfile(null); return; }
-    try {
-      const { data, error } = await supabase
-        .from('perfis_usuarios')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      if (error) throw error;
-      if (data) {
-        setProfile(data);
-      } else {
-        // Fallback: monta perfil mínimo a partir dos metadados do token
-        setProfile({
-          id: userId,
-          email: userMeta?.email ?? '',
-          full_name: userMeta?.user_metadata?.full_name ?? userMeta?.email ?? '',
-          role: userMeta?.user_metadata?.role ?? 'paciente',
-        });
-      }
-    } catch (err) {
-      console.error('fetchProfile error:', err);
-      // Fallback para não travar na tela de loading
-      setProfile({
-        id: userId,
-        email: userMeta?.email ?? '',
-        full_name: userMeta?.user_metadata?.full_name ?? '',
-        role: userMeta?.user_metadata?.role ?? 'paciente',
-      });
-    }
-  }, []);
-
-  const handleSession = useCallback(async (session) => {
-    setSession(session);
-    const u = session?.user ?? null;
-    setUser(u);
-
-    if (u) {
-      // Fallback imediato dos metadados do token — não bloqueia o loading
-      setProfile({
-        id: u.id,
-        email: u.email ?? '',
-        full_name: u.user_metadata?.full_name ?? u.email ?? '',
-        role: u.user_metadata?.role ?? 'paciente',
-      });
-      // Busca assíncrona para enriquecer com dados do banco (sem bloquear)
-      fetchProfile(u.id, u);
-    } else {
-      setProfile(null);
-    }
-
-    setLoading(false);
-  }, [fetchProfile]);
-
   useEffect(() => {
-    let mounted = true;
+    // Inicialização: pegar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setProfile(session?.user ? buildProfileFromUser(session.user) : null);
+      setLoading(false);
 
-    const getSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        if (mounted) handleSession(session);
-      } catch (error) {
-        console.error('Error getting session:', error);
-        if (mounted) setLoading(false);
+      // Enriquecer profile com dados do banco em background
+      if (session?.user) {
+        supabase
+          .from('perfis_usuarios')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data) setProfile(data);
+          });
       }
-    };
+    });
 
-    getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (mounted) handleSession(session);
+    // Escutar mudanças de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setProfile(buildProfileFromUser(session.user));
+        // Enriquecer em background
+        supabase
+          .from('perfis_usuarios')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data) setProfile(data);
+          });
+      } else {
+        setProfile(null);
       }
-    );
+      setLoading(false);
+    });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [handleSession]);
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signUp = useCallback(async (email, password, options) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options,
-      });
-
+      const { data, error } = await supabase.auth.signUp({ email, password, options });
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Sign up Failed",
-        description: error.message || "Something went wrong",
-      });
+      toast({ variant: 'destructive', title: 'Erro no cadastro', description: error.message });
       return { data: null, error };
     }
   }, [toast]);
 
   const signIn = useCallback(async (email, password) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Sign in Failed",
-        description: error.message || "Something went wrong",
-      });
+      toast({ variant: 'destructive', title: 'Erro no login', description: error.message });
       return { data: null, error };
     }
   }, [toast]);
@@ -140,11 +95,7 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
       return { error: null };
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Sign out Failed",
-        description: error.message || "Something went wrong",
-      });
+      toast({ variant: 'destructive', title: 'Erro ao sair', description: error.message });
       return { error };
     }
   }, [toast]);
