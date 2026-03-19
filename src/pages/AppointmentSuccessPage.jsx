@@ -36,7 +36,7 @@ const AppointmentSuccessPage = () => {
           *, 
           medico:medicos(public_name, specialty), 
           guia:guias!agendamentos_guia_id_fkey(protocolo, pdf_url),
-          patient:perfis_usuarios!agendamentos_patient_id_fkey(full_name)
+          patient:perfis_usuarios!agendamentos_patient_perfis_fkey(full_name)
         `)
         .eq('id', appointmentId)
         .single();

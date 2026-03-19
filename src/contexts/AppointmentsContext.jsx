@@ -47,10 +47,10 @@ export const AppointmentsProvider = ({ children }) => {
                 .from('agendamentos')
                 .select(`
                     *,
-                    medicos!inner(id, name,specialty,public_name),
-                    perfis_usuarios:perfis_usuarios!agendamentos_patient_id_fkey(full_name, email, cpf, data_nasc, whatsapp),
+                    medicos!inner(id, name, specialty, public_name),
+                    perfis_usuarios:perfis_usuarios!agendamentos_patient_perfis_fkey(full_name, email, cpf, data_nasc, whatsapp),
                     guest_patients:guest_id(name, email, phone),
-                    guias:agendamentos_guia_id_fkey!left(id,protocolo)
+                    guias:agendamentos_guia_id_fkey!left(id, protocolo)
                 `);
             
             if (profile.role === 'paciente') {

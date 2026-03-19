@@ -109,7 +109,7 @@ const AppointmentConfirmationPage = () => {
             *,
             medico:medicos(public_name, specialty, price_in_cents, clinic_logo_url, crm, uf, name),
             guia:guia_id(*),
-            patient:perfis_usuarios!agendamentos_patient_id_fkey(full_name, cpf, data_nasc, whatsapp, email)
+            patient:perfis_usuarios!agendamentos_patient_perfis_fkey(full_name, cpf, data_nasc, whatsapp, email)
             `)
             .eq('id', appointmentId)
             .single();
@@ -140,7 +140,7 @@ const AppointmentConfirmationPage = () => {
       }, async (payload) => {
           const { data } = await supabase
             .from('agendamentos')
-            .select('*, medico:medicos(public_name, specialty, price_in_cents, clinic_logo_url, crm, uf, name), guia:guia_id(*), patient:perfis_usuarios!agendamentos_patient_id_fkey(full_name, cpf, data_nasc, whatsapp, email)')
+            .select('*, medico:medicos(public_name, specialty, price_in_cents, clinic_logo_url, crm, uf, name), guia:guia_id(*), patient:perfis_usuarios!agendamentos_patient_perfis_fkey(full_name, cpf, data_nasc, whatsapp, email)')
             .eq('id', appointmentId)
             .single();
           if (data) setAppointment(data);

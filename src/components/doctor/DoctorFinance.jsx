@@ -55,7 +55,7 @@ const DoctorFinance = () => {
             
             const { data: appts, error: apptsError } = await supabase
                 .from('agendamentos')
-                .select('*, patient:perfis_usuarios!agendamentos_patient_id_fkey(full_name)')
+                .select('*, patient:perfis_usuarios!agendamentos_patient_perfis_fkey(full_name)')
                 .eq('medico_id', doc.id)
                 .order('appointment_date', { ascending: false });
 
