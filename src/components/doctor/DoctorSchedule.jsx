@@ -66,8 +66,8 @@ const DoctorSchedule = ({ onScheduleSave }) => {
         const timeZone = 'America/Sao_Paulo';
         return (data || []).map(item => ({
             ...item,
-            hora_inicio: format(utcToZonedTime(parseISO(item.hora_inicio), timeZone), 'HH:mm'),
-            hora_fim: format(utcToZonedTime(parseISO(item.hora_fim), timeZone), 'HH:mm'),
+            hora_inicio: item.hora_inicio ? item.hora_inicio.substring(0, 5) : '08:00',
+            hora_fim: item.hora_fim ? item.hora_fim.substring(0, 5) : '12:00',
         }));
     }, [doctorProfile]);
     
@@ -122,13 +122,11 @@ const DoctorSchedule = ({ onScheduleSave }) => {
         setIsSaving(true);
         const toInsert = [];
         const toUpdate = [];
+        // Coluna agenda_medico.hora_inicio/hora_fim é tipo TIME — mandar apenas HH:MM:SS
         const formatToUtcTimestamp = (timeString) => {
-            const now = new Date();
-            const [hours, minutes] = timeString.split(':').map(Number);
-            const dateInSaoPaulo = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
-            const saoPauloOffset = -3 * 60; 
-            const localOffset = dateInSaoPaulo.getTimezoneOffset();
-            return new Date(dateInSaoPaulo.getTime() - (saoPauloOffset + localOffset) * 60 * 1000).toISOString();
+            if (!timeString) return null;
+            const parts = timeString.split(':');
+            return `${parts[0].padStart(2,'0')}:${(parts[1]||'00').padStart(2,'0')}:00`;
         };
 
         formData.schedule.forEach(block => {
