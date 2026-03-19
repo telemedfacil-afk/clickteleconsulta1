@@ -187,6 +187,13 @@ function App() {
             </ProtectedRoute>
           } />
 
+          {/* Rota JaaS — videochamada inline (8x8.vc) */}
+          <Route path="/consulta/:appointmentId" element={
+            <ProtectedRoute allowedRoles={['medico', 'paciente']}>
+              <VideoCallPage />
+            </ProtectedRoute>
+          } />
+
           {/* Direct Messages Route */}
           <Route path="/mensagens" element={
             <ProtectedRoute allowedRoles={['medico', 'paciente']}>

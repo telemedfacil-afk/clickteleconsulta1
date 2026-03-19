@@ -72,3 +72,24 @@ export const openJitsiRoom = (roomName, displayName) => {
     return { ok: false, error: "Popup blocked" };
   }
 };
+
+/**
+ * Generates a JaaS (8x8.vc) JWT token via Supabase Edge Function.
+ * The private key is NEVER exposed to the frontend — signing happens server-side.
+ *
+ * @param {object} supabase - Supabase client instance
+ * @param {object} params
+ * @param {string} params.appointmentId - UUID do agendamento
+ * @param {string} params.userId - UUID do usuário autenticado
+ * @param {string} params.displayName - Nome de exibição na sala
+ * @param {string} params.email - Email do usuário
+ * @param {boolean} params.isModerator - true para médico, false para paciente
+ * @returns {Promise<{ token: string, roomName: string, appId: string }>}
+ */
+export const generateJaaSToken = async (supabase, { appointmentId, userId, displayName, email, isModerator }) => {
+  const { data, error } = await supabase.functions.invoke('generate-jaas-token', {
+    body: { appointmentId, userId, displayName, email, isModerator }
+  });
+  if (error) throw error;
+  return data; // { token, roomName, appId }
+};
