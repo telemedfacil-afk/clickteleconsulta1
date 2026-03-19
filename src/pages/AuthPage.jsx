@@ -68,8 +68,10 @@ const AuthPage = ({
     
     if (pendingTCLE) {
       navigate('/patient/consultations');
+    } else if (targetRole === 'medico') {
+      navigate('/medico/dashboard');
     } else {
-      navigate('/');
+      navigate('/paciente/dashboard');
     }
     
     // Hide loader after navigation starts to ensure smooth transition

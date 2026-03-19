@@ -11,12 +11,61 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+
+  const fetchProfile = useCallback(async (userId, userMeta) => {
+    if (!userId) { setProfile(null); return; }
+    try {
+      const { data, error } = await supabase
+        .from('perfis_usuarios')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        setProfile(data);
+      } else {
+        // Fallback: monta perfil mínimo a partir dos metadados do token
+        setProfile({
+          id: userId,
+          email: userMeta?.email ?? '',
+          full_name: userMeta?.user_metadata?.full_name ?? userMeta?.email ?? '',
+          role: userMeta?.user_metadata?.role ?? 'paciente',
+        });
+      }
+    } catch (err) {
+      console.error('fetchProfile error:', err);
+      // Fallback para não travar na tela de loading
+      setProfile({
+        id: userId,
+        email: userMeta?.email ?? '',
+        full_name: userMeta?.user_metadata?.full_name ?? '',
+        role: userMeta?.user_metadata?.role ?? 'paciente',
+      });
+    }
+  }, []);
 
   const handleSession = useCallback(async (session) => {
     setSession(session);
-    setUser(session?.user ?? null);
+    const u = session?.user ?? null;
+    setUser(u);
+
+    if (u) {
+      // Fallback imediato dos metadados do token — não bloqueia o loading
+      setProfile({
+        id: u.id,
+        email: u.email ?? '',
+        full_name: u.user_metadata?.full_name ?? u.email ?? '',
+        role: u.user_metadata?.role ?? 'paciente',
+      });
+      // Busca assíncrona para enriquecer com dados do banco (sem bloquear)
+      fetchProfile(u.id, u);
+    } else {
+      setProfile(null);
+    }
+
     setLoading(false);
-  }, []);
+  }, [fetchProfile]);
 
   useEffect(() => {
     let mounted = true;
@@ -104,10 +153,11 @@ export const AuthProvider = ({ children }) => {
     user,
     session,
     loading,
+    profile,
     signUp,
     signIn,
     signOut,
-  }), [user, session, loading, signUp, signIn, signOut]);
+  }), [user, session, loading, profile, signUp, signIn, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

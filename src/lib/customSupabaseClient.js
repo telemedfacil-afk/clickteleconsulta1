@@ -1,13 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://hlzwknxrlgmffdcyzsoj.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsendrbnhybGdtZmZkY3l6c29qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMTc4NDQsImV4cCI6MjA3MTc5Mzg0NH0.UtLywUXVPdTgmWVWorbkWGxGHaMg1zziIU3x-GTpGhc';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://fnzvopspcoefzybtmwlg.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY 
+  || import.meta.env.VITE_SUPABASE_ANON_KEY
+  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuenZvcHNwY29lZnp5YnRtd2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3OTU0NjgsImV4cCI6MjA4OTM3MTQ2OH0.mMDj-2NKx88cQz8cCsljKtscG5ayYEYbmISq04wAEOg';
 
-const customSupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
 
-export default customSupabaseClient;
-
-export { 
-    customSupabaseClient,
-    customSupabaseClient as supabase,
-};
+export const customSupabaseClient = supabase;
+export default supabase;

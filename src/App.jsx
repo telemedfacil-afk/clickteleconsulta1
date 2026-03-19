@@ -88,21 +88,20 @@ const AuthRedirect = ({ role }) => {
   const { session, profile, loading } = useAuth();
   const location = useLocation();
 
-  if (loading || (session && !profile)) {
+  if (loading) {
     return (
       <div className="w-full h-[60vh] flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="text-muted-foreground text-sm animate-pulse">
-           {session && !profile ? 'Finalizando configuração da conta...' : 'Carregando...'}
-        </p>
+        <p className="text-muted-foreground text-sm animate-pulse">Carregando...</p>
       </div>
     );
   }
 
-  if (session && profile) {
-    if (profile.role === 'admin') return <Navigate to="/admin/dashboard/agendamentos" replace />;
-    
-    const from = location.state?.from?.pathname || (profile.role === 'medico' ? '/medico/dashboard' : '/paciente/dashboard');
+  if (session) {
+    // Usa profile do contexto, ou fallback direto dos metadados do token
+    const userRole = profile?.role ?? session.user?.user_metadata?.role ?? 'paciente';
+    if (userRole === 'admin') return <Navigate to="/admin/dashboard/agendamentos" replace />;
+    const from = location.state?.from?.pathname || (userRole === 'medico' ? '/medico/dashboard' : '/paciente/dashboard');
     return <Navigate to={from} replace />;
   }
   
