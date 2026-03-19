@@ -11,7 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { format, addDays, startOfToday, isToday, addMinutes, parseISO } from 'date-fns';
+import { format, addDays, startOfToday, isToday, addMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { utcToZonedTime } from 'date-fns-tz';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -23,24 +23,25 @@ const generateTimeSlotsFromAgenda = (agenda, day) => {
   const slots = [];
   const timeZone = 'America/Sao_Paulo';
   const nowInBrasilia = utcToZonedTime(new Date(), timeZone);
-  const timeLimit = addMinutes(nowInBrasilia, 20);
-  
+  const timeLimitStr = format(addMinutes(nowInBrasilia, 20), 'HH:mm');
+  const isDayToday = isToday(day);
+
   relevantBlocks.forEach(block => {
-    const startDateTimeUTC = parseISO(block.hora_inicio);
-    const endDateTimeUTC = parseISO(block.hora_fim);
-    const zonedStartTime = utcToZonedTime(startDateTimeUTC, timeZone);
-    const zonedEndTime = utcToZonedTime(endDateTimeUTC, timeZone);
-    let currentSlotTime = new Date(day);
-    currentSlotTime.setHours(zonedStartTime.getHours(), zonedStartTime.getMinutes(), 0, 0);
-    const endBlockTime = new Date(day);
-    endBlockTime.setHours(zonedEndTime.getHours(), zonedEndTime.getMinutes(), 0, 0);
-    
-    while (currentSlotTime < endBlockTime) {
-      const slotInBrasilia = utcToZonedTime(currentSlotTime, timeZone);
-      if (slotInBrasilia > timeLimit) {
-        slots.push(format(slotInBrasilia, 'HH:mm'));
+    // hora_inicio/hora_fim are stored as "HH:MM:SS" strings in Brasilia time
+    const [startHour, startMin] = block.hora_inicio.split(':').map(Number);
+    const [endHour, endMin] = block.hora_fim.split(':').map(Number);
+
+    let totalMins = startHour * 60 + startMin;
+    const endTotalMins = endHour * 60 + endMin;
+
+    while (totalMins < endTotalMins) {
+      const h = Math.floor(totalMins / 60);
+      const m = totalMins % 60;
+      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      if (!isDayToday || timeStr > timeLimitStr) {
+        slots.push(timeStr);
       }
-      currentSlotTime = addMinutes(currentSlotTime, block.intervalo_em_minutos);
+      totalMins += block.intervalo_em_minutos;
     }
   });
   return [...new Set(slots)].sort();
