@@ -23,17 +23,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
-  // Profile is still loading after session is confirmed
-  if (!profile) {
-      return (
-        <div className="w-full h-screen flex items-center justify-center bg-background">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
-            <p className="ml-4 text-muted-foreground">Carregando perfil...</p>
-        </div>
-      )
-  }
-
-  if (allowedRoles && !allowedRoles.includes(profile?.role)) {
+  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
     return (
         <div className="w-full flex justify-center items-center py-12">
             <Card className="w-full max-w-md text-center">
