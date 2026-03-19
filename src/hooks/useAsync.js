@@ -12,7 +12,7 @@ const useAsync = (asyncFunction, immediate = true) => {
     setError(null);
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("A requisição demorou muito para responder. Verifique sua conexão.")), 6000)
+      setTimeout(() => reject(new Error("A requisição demorou muito para responder. Verifique sua conexão.")), 20000)
     );
 
     try {
