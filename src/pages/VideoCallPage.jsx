@@ -43,7 +43,7 @@ const VideoCallPage = () => {
           .from('agendamentos')
           .select(`
             *,
-            medicos:medico_id (id, name, public_name),
+            medicos:medico_id (id, name, public_name, user_id),
             perfis_usuarios:patient_id (id, full_name),
             guest_patients:guest_id (name)
           `)
@@ -53,20 +53,21 @@ const VideoCallPage = () => {
         if (error) throw error;
         if (!data) throw new Error("Agendamento não encontrado.");
 
-        // Security check: ensure user is related to appointment
-        const isDoctor = profile?.role === 'medico' && data.medico_id === profile.id; // profile.id maps to medico table id via some join or we assume strict relation? 
-        // Actually profile.id is perfis_usuarios.id. For doctors, we need to check if they own the doctor record.
-        // Assuming simplistic check for now based on typical RLS: if they could fetch it, they can likely view it.
-        // But let's be safe:
-        const isPatient = data.patient_id === session.user.id; // user_id in agendamentos/patients is usually auth.uid
-        
-        // For simpler logic matching previous flows:
-        // openRoom handles role
-        
+        // Verificação de autorização: apenas médico ou paciente do agendamento podem entrar
+        // médico: verifica via medicos.user_id (que mapeia para auth.uid)
+        const isDoctor = profile?.role === 'medico' && data.medicos?.user_id === session.user.id;
+        const isPatient = data.patient_id === session.user.id;
+
+        if (!isDoctor && !isPatient) {
+          setError('Acesso negado. Você não faz parte desta consulta.');
+          setLoading(false);
+          return;
+        }
+
         setAppointment(data);
         setLoading(false);
-        // Automatically open the room when appointment is loaded
-        openRoom(data, profile?.role === 'medico' ? 'doctor' : 'patient');
+        // Abrir sala apenas para participantes autorizados
+        openRoom(data, isDoctor ? 'doctor' : 'patient');
 
       } catch (err) {
         console.error('Error fetching appointment:', err);
